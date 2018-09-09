@@ -1,22 +1,16 @@
-﻿Build started 4/09/2018 4:59:29 PM.
-     1>Project "d:\Users\6639\Desktop\openGLProject\openGLProject\openGLProject\openGLProject.vcxproj" on node 2 (Build target(s)).
-     1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
-         main.cpp
-     1>d:\users\6639\desktop\openglproject\openglproject\openglproject\main.cpp(731): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>d:\users\6639\desktop\openglproject\openglproject\openglproject\main.cpp(732): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>d:\users\6639\desktop\openglproject\openglproject\openglproject\main.cpp(736): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
-     1>d:\users\6639\desktop\openglproject\openglproject\openglproject\main.cpp(737): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
-     1>d:\users\6639\desktop\openglproject\openglproject\openglproject\main.cpp(738): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>d:\users\6639\desktop\openglproject\openglproject\openglproject\main.cpp(739): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>d:\users\6639\desktop\openglproject\openglproject\openglproject\main.cpp(747): warning C4244: 'argument' : conversion from 'double' to 'float', possible loss of data
-       Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"d:\Users\6639\Desktop\openGLProject\openGLProject\Debug\openGLProject.exe" /INCREMENTAL /NOLOGO opengl32.lib glfw3.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"d:\Users\6639\Desktop\openGLProject\openGLProject\Debug\openGLProject.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"d:\Users\6639\Desktop\openGLProject\openGLProject\Debug\openGLProject.lib" /MACHINE:X86 Debug\glad.obj
-         Debug\main.obj
-         Debug\Shader.obj
-         openGLProject.vcxproj -> d:\Users\6639\Desktop\openGLProject\openGLProject\Debug\openGLProject.exe
-     1>Done Building Project "d:\Users\6639\Desktop\openGLProject\openGLProject\openGLProject\openGLProject.vcxproj" (Build target(s)).
-
-Build succeeded.
-
-Time Elapsed 00:00:03.04
+﻿  glad.c
+  Shader.cpp
+c:\users\rzzil\desktop\openglproject\openglproject\openglproject\shader.cpp(42): warning C4101: “success”: 未引用的局部变量
+  main.cpp
+c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(495): warning C4305: “参数”: 从“double”到“GLfloat”截断
+c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(655): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(656): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(660): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(661): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(662): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(663): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(671): warning C4244: “参数”: 从“double”转换到“float”，可能丢失数据
+  正在生成代码...
+LINK : warning LNK4098: 默认库“MSVCRT”与其他库的使用冲突；请使用 /NODEFAULTLIB:library
+  openGLProject.vcxproj -> C:\Users\Rzzil\Desktop\openGLProject\openGLProject\Debug\openGLProject.exe
+  openGLProject.vcxproj -> C:\Users\Rzzil\Desktop\openGLProject\openGLProject\Debug\openGLProject.pdb (Full PDB)
