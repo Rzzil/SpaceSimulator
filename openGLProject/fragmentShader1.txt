@@ -1,0 +1,14 @@
+#version 330 core
+//fragment shader must describe an output colour
+out vec4 FragColor;
+
+//we're going to catch the out value from our vertex shader here with an
+//in variable of the same name (must match type and name)
+in vec4 vertexColor;
+
+void main()
+{
+	FragColor = vertexColor;
+	//this out value will be used to describe a single fragment, which helps work out
+	//final pixel colours on the screen
+}

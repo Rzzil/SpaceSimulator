@@ -1,0 +1,22 @@
+#version 330 core
+//fragment shader must describe an output colour
+out vec4 FragColor;
+
+in vec3 vertexColour;
+in vec2 TexCoord; //ins here must match var names from verShader's outs
+
+//we need a sampler to hold reference to the texture and it helps sample the texture across the polygon
+uniform sampler2D texture1;
+uniform sampler2D texture2;
+
+
+void main()
+{
+	//params:
+	//colour1(or use texture to get pixel colour from texture)
+	//colour2
+	//blending amout (0.2 is 20% texture2, 80%texture1)
+	FragColor = mix(texture(texture1, TexCoord), texture(texture2,TexCoord),0.2);
+	//FragColor = texture(texture1, TexCoord); using 1 texture to work out pixel colours on screen
+	//FragColor = vec4(vertexColour, 1.0);
+}

@@ -1,0 +1,19 @@
+#version 330 core
+//vertex shader has 15 min in variable slots, so we have to say which slot each
+//variable is to use
+layout (location = 0) in vec3 aPos; //in variables are passed into this shader
+layout (location = 1) in vec3 aColour;
+
+out vec3 vertexColour;
+	
+void main()
+{
+	//in vertex shader, gl_position must be set a value of type vec4
+	//this is to help with drawing/building primitives etc. So it needs
+	//to know how to use it
+	gl_Position = vec4(aPos,1.0);//vec4(aPos.x, aPos.y, aPos.z, 1.0);
+	//vec3: has 3 values, you can represent them as xyz, rgb or rst
+	//vec4: has 4, xyzw and rgba
+	
+	vertexColour = aColour;
+}

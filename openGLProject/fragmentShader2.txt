@@ -1,0 +1,11 @@
+#version 330 core
+//fragment shader must describe an output colour
+out vec4 FragColor;
+
+//basically global variables, we set these via code directly
+uniform vec4 ourColour;
+
+void main()
+{
+	FragColor = ourColour;
+}
