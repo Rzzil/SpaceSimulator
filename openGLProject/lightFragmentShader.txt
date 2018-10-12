@@ -1,0 +1,43 @@
+#version 330 core
+//fragment shader must describe an output colour
+out vec4 FragColor;
+
+in vec3 vertexColour;
+in vec2 TexCoord;
+in vec3 Normal;
+in vec3 FragPos;
+
+//we need a sampler to hold reference to the texture and it helps sample the texture across the polygon
+uniform sampler2D texture1; //DIFFUSE MAP (used to help describe colours on polygons)
+uniform sampler2D texture2; //SPECULAR MAP (how shiny each part of the texture is)
+
+uniform vec3 objectColour;
+uniform vec3 lightColour;
+uniform vec3 lightPos;
+
+uniform vec3 viewPos; //where our camera is
+
+void main()
+{
+	float ambientStrength = 0.1;
+	vec3 ambient = ambientStrength * lightColour * vec3(texture(texture1,TexCoord));
+	
+	vec3 norm = normalize(Normal);
+	vec3 lightDir = normalize(lightPos - FragPos);
+	float diff = max(dot(norm, lightDir), 0.0);
+	vec3 diffuse = diff * lightColour * vec3(texture(texture1,TexCoord));
+	
+	float specularStrength = 0.5;
+	vec3 viewDir = normalize(viewPos - FragPos);
+	vec3 reflectDir = reflect(-lightDir,norm);
+	
+	float spec = pow(max(dot(viewDir,reflectDir),0.0),32);//the bigger the number, the more pinpointed the light
+	vec3 specular = spec * lightColour * vec3(texture(texture2,TexCoord));
+	
+	//PHONGS lighting model
+	vec3 result = (ambient + diffuse + specular);
+
+
+
+	FragColor = vec4(result, 1.0);
+}

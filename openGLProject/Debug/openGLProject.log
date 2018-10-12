@@ -1,16 +1,2 @@
-﻿  glad.c
-  Shader.cpp
-c:\users\rzzil\desktop\openglproject\openglproject\openglproject\shader.cpp(42): warning C4101: “success”: 未引用的局部变量
-  main.cpp
-c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(495): warning C4305: “参数”: 从“double”到“GLfloat”截断
-c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(655): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
-c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(656): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
-c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(660): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
-c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(661): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
-c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(662): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
-c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(663): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
-c:\users\rzzil\desktop\openglproject\openglproject\openglproject\main.cpp(671): warning C4244: “参数”: 从“double”转换到“float”，可能丢失数据
-  正在生成代码...
-LINK : warning LNK4098: 默认库“MSVCRT”与其他库的使用冲突；请使用 /NODEFAULTLIB:library
-  openGLProject.vcxproj -> C:\Users\Rzzil\Desktop\openGLProject\openGLProject\Debug\openGLProject.exe
-  openGLProject.vcxproj -> C:\Users\Rzzil\Desktop\openGLProject\openGLProject\Debug\openGLProject.pdb (Full PDB)
+﻿  openGLProject.vcxproj -> C:\Users\Jason\Documents\GitHub\SpaceSimulator\Debug\openGLProject.exe
+  openGLProject.vcxproj -> C:\Users\Jason\Documents\GitHub\SpaceSimulator\Debug\openGLProject.pdb (Full PDB)

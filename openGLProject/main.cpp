@@ -22,6 +22,12 @@ bool wireFrame = false;
 
 int selectedColour = 1;
 
+bool isHideText = false;
+
+//lighting globals
+glm::vec3 lightPos(0.0f, 0.0f, -5.0f);
+glm::vec3 lightColour(1.0f, 1.0f, 1.0f);
+
 //camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = 400, lastY = 300;
@@ -49,7 +55,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 GLFWwindow* GameInit();
 
 //Load Up Image file
-void LoadUpImage();
+void LoadUpImage(const char* path);
 
 
 
@@ -81,10 +87,13 @@ void main()
 {
 	GLFWwindow *window = GameInit();
 
-	Shader shaderProgram1("vertexShader1.txt", "fragmentShader1.txt");
-	Shader shaderProgram2("vertexShader2.txt", "fragmentShader2.txt");
-	Shader shaderProgram3("vertexShader3.txt", "fragmentShader3.txt");
-	Shader shaderProgram4("cubeVertexShader.txt", "cubeFragmentShader.txt");
+	Shader shaderProgram("cubeVertexShader.txt", "cubeFragmentShader.txt");
+	Shader shaderProgram1("cubeVertexShader.txt", "cubeFragmentShader.txt");
+	Shader shaderProgram2("cubeVertexShader.txt", "cubeFragmentShader.txt");
+	Shader shaderProgram3("cubeVertexShader.txt", "cubeFragmentShader.txt");
+	Shader lightShaderProgram("lightCubeVertexShader.txt", "lightFragmentShader.txt");
+	Shader lampShaderProgram("cubeVertexShader.txt", "lampFragmentShader.txt");
+	
 
 	//Compile Shader Source into shader programs
 	//vertex shader first
@@ -145,62 +154,32 @@ void main()
 	glDeleteShader(vertexShaderID);
 	glDeleteShader(fragmentShaderID);
 
-	//3 points in X,Y,Z
-	float vertices[] =
-	{
-		0.5f, -0.5f, 0, //bottom right point
-		-0.5f, -0.5f, 0, //bottom left
-		0.0f, 0.5f, 0 // top
-	};
-
-	float rectVertices[] =
+	float polygon1[] =
 	{
 		//first triangle
-		0.5f, 0.5f, 0.0f,//top right  0
-		0.5f, -0.5f, 0.0f, //bottom right   1
-		//-0.5f, 0.5f, 0.0f, //top left
-		//second triangle
-		//0.5f, -0.5f, 0.0f, //bottom right
-		-0.5f, -0.5f, 0.0f, //bottom left  2
-		-0.5f, 0.5f, 0.0f //top left  3
-
+		-1.0f, 1.0f, 0.0f, 0.0f, 1.0f,//0
+		1.0f, 1.0f, 0.0f, 1.0f, 1.0f,//1
+		-1.0f, 0.5f, 0.0f, 0.0f, 0.0f,//2
+		1.0f, 0.5f, 0.0f, 1.0f, 0.0f//3
 	};
 
-	float polygon[] =
+	float polygon2[] =
 	{
 		//first triangle
-		-1.0f, 0.0f, 0.0f,//0
-		0.0f, 0.0f, 0.0f,//1
-		1.0f, 0.0f, 0.0f,//2
-		-0.6f, 0.7f, 0.0f,//3
-		0.6f, 0.7f, 0.0f,//4
-		0.0f, 1.0f, 0.0f,//5
+		-1.0f, -0.5f, 0.0f, 0.0f, 1.0f,//0
+		1.0f, -0.5f, 0.0f, 1.0f, 1.0f,//1
+		-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,//2
+		1.0f, -1.0f, 0.0f, 1.0f, 0.0f//3
 	};
 
 	//the vertices order, treating each xyz as an index
 	unsigned int indices[] =
 	{
-		0, 1, 3,
-		1, 2, 3
+		0, 2, 3,
+		0, 1, 3
 	};
 
-	float rainbowTriangleVertices[] =
-	{
-		//x		y		z	r		g	b
-		0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f
-	};
-
-	float colourRectVertices[] =
-	{
-		// positions      // colors   // texture coords
-		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
-		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-		-0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f // top left 
-	};
-
+	//earth Vertices
 	float textureCubVertices[] =
 	{
 		//x		y		z	  texX	texY
@@ -247,45 +226,133 @@ void main()
 		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f
 	};
 
+	//Sun Vertices
+	float textureCubVertices1[] =
+	{
+		//x		y		z	  texX	texY
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+		0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+
+		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		-0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f
+	};
+
+
+//----------------------------------------------------------------------------------------
+	unsigned int polygonVAO;
+	glGenVertexArrays(1, &polygonVAO);
+	glBindVertexArray(polygonVAO);
+
+	unsigned int polygonVBO;
+	glGenBuffers(1, &polygonVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, polygonVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(polygon1), polygon1, GL_STATIC_DRAW);
+
+	unsigned int polygonEBO;
+	glGenBuffers(1, &polygonEBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, polygonEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	
-	//CREATE VBO TO STORE VERTICES
-	unsigned int textureRectVBO;
-	glGenBuffers(1, &textureRectVBO);
-	//CREATE EBO TO STORE CONNECTION INDEXES
-	unsigned int textureRectEBO;
-	glGenBuffers(1, &textureRectEBO);
-	//CREATE VAO TO STORE OPERATIONS ON VBO
-	unsigned int textureRectVAO;
-	glGenVertexArrays(1, &textureRectVAO);
-	//to work with this VAO bind it to make it the current one
-	glBindVertexArray(textureRectVAO);
-		//bind the buffer object to this vao
-		glBindBuffer(GL_ARRAY_BUFFER, textureRectVBO);
-		//give data to VBO
-		glBufferData(GL_ARRAY_BUFFER, sizeof(colourRectVertices), colourRectVertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
 
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
-		//bind elemental buffer object to this vao
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, textureRectEBO);
-		//give indices to ebo
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-		//tell VAO which part of the VBO is for location = 0 of our vertex shader
-		//Position(x,y,z)
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-		//onto location = 1
-		//Colour(R,G,B)
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-		//last, location = 2
-		//Texture Coordinate(S,T)
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-		glEnableVertexAttribArray(2);
-	//unbind our VAO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
+	unsigned int topTextureID;
+	glGenTextures(1, &topTextureID);
+	//we bind the texture to make it the one we're working on
+	glBindTexture(GL_TEXTURE_2D, topTextureID);
+	//set wrapping options(repeat texture if texture coordinates dont fully cover polygons)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);//wraps on the s(x) axis
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);//wraps on the t(y) axis
+	//set filtering options
+	//Suggestion use nearest neightbour for pixel art, use bilinear for pretty much everything else
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);//GL_LINEAR(bilinear) or GL_NEAREST for shrinking
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);//for stretching
+
+	LoadUpImage("Assets/top.jpg");
+
+//---------------------------------------------------------------------------------------
+	unsigned int polygonVAO1;
+	glGenVertexArrays(1, &polygonVAO1);
+	glBindVertexArray(polygonVAO1);
+
+	unsigned int polygonVBO1;
+	glGenBuffers(1, &polygonVBO1);
+	glBindBuffer(GL_ARRAY_BUFFER, polygonVBO1);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(polygon2), polygon2, GL_STATIC_DRAW);
+
+	unsigned int polygonEBO1;
+	glGenBuffers(1, &polygonEBO1);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, polygonEBO1);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	unsigned int bottomTextureID;
+	glGenTextures(1, &bottomTextureID);
+	//we bind the texture to make it the one we're working on
+	glBindTexture(GL_TEXTURE_2D, bottomTextureID);
+	//set wrapping options(repeat texture if texture coordinates dont fully cover polygons)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);//wraps on the s(x) axis
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);//wraps on the t(y) axis
+																 //set filtering options
+																 //Suggestion use nearest neightbour for pixel art, use bilinear for pretty much everything else
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);//GL_LINEAR(bilinear) or GL_NEAREST for shrinking
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);//for stretching
+
+	LoadUpImage("Assets/Bottom1.jpg");
+
+//---------------------------------------------------------------------------------------
 
 	//generate a texture in gpu, return id
 	unsigned int texture1ID;
@@ -299,6 +366,7 @@ void main()
 	//Suggestion use nearest neightbour for pixel art, use bilinear for pretty much everything else
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);//GL_LINEAR(bilinear) or GL_NEAREST for shrinking
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);//for stretching
+
 
 
 	//1. Vertex represents what data? position(xyz), colour(rgb), texture Coordinates(Ts, Tt)
@@ -332,19 +400,69 @@ void main()
 	glBindVertexArray(0);
 
 	//Load up an image file
-	LoadUpImage();
+	LoadUpImage("Assets/Earth.jpg");
+
+//---------------------------------------------------------------------------------------
+
+//generate a texture in gpu, return id
+	unsigned int texture2ID;
+	glGenTextures(1, &texture2ID);
+	//we bind the texture to make it the one we're working on
+	glBindTexture(GL_TEXTURE_2D, texture2ID);
+	//set wrapping options(repeat texture if texture coordinates dont fully cover polygons)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);//wraps on the s(x) axis
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);//wraps on the t(y) axis
+																 //set filtering options
+																 //Suggestion use nearest neightbour for pixel art, use bilinear for pretty much everything else
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);//GL_LINEAR(bilinear) or GL_NEAREST for shrinking
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);//for stretching
+
+
+
+	//1. Vertex represents what data? position(xyz), colour(rgb), texture Coordinates(Ts, Tt)
+
+
+	//2. Vertex Buffer Object? stores vertices in the GPU
+	unsigned int cubeVBO1;
+	glGenBuffers(1, &cubeVBO1);
+
+
+	//3. Vertex Array Object? tries to describe the data in the VBO and relay it to the first shader
+	unsigned int cubeVAO1;
+	glGenVertexArrays(1, &cubeVAO1);
+
+	glBindVertexArray(cubeVAO1);
+	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO1);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(textureCubVertices1), textureCubVertices1, GL_STATIC_DRAW);
+
+	//xyz to location = 0
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	//texture coordinates to location = 1
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+
+	//unbind stuff
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	//Load up an image file
+	LoadUpImage("Assets/Sun.jpg");
 	
 	//Generate a texture in our graphics card to work with
-	unsigned int texture2ID;
-	glGenTextures(1, &texture2ID); //generate 1 texture id and store in texture2ID
-	glBindTexture(GL_TEXTURE_2D, texture2ID);//make this texutre the currently working texture, saying its a 2d texture (as opposed to 1d and 3d)
-	
-	//how will texture repeat on large surfaces
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);//how wrap horizontally (S axis...)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);//how to wrap vertically (T axis...)
-	//how will texture deal with shrink and stretch
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);//when shrinking texture use bilinear filter
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);//use nearest neighbour filtering on stretch
+	//unsigned int texture2ID;
+	//glGenTextures(1, &texture2ID); //generate 1 texture id and store in texture2ID
+	//glBindTexture(GL_TEXTURE_2D, texture2ID);//make this texutre the currently working texture, saying its a 2d texture (as opposed to 1d and 3d)
+	//
+	////how will texture repeat on large surfaces
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);//how wrap horizontally (S axis...)
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);//how to wrap vertically (T axis...)
+	////how will texture deal with shrink and stretch
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);//when shrinking texture use bilinear filter
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);//use nearest neighbour filtering on stretch
 
 	////Load up an image
 	//unsigned char *imageData2 = stbi_load("airplane.png", &width, &height, &numberChannels, 0);
@@ -364,101 +482,7 @@ void main()
 
 
 
-	//generate vertex buffer objects in our GPU to store our vertices
-	//if we only need 1
-	unsigned int VBO; //we're gonna store the id of a vertex buffer object in this var
-	glGenBuffers(1, &VBO); //params: how many vertex buffer objects to build and where to store their id's
-	//if we need to generate multiple VBO's
-	//unsigned int VBOs[2];
-	//glGenBuffers(2, VBOs);
 
-	//vbo for rect
-	unsigned int VBO2;
-	glGenBuffers(1, &VBO2);
-
-	//vbo for rainbow triangle
-	unsigned int VBO3;
-	glGenBuffers(1, &VBO3);
-
-	//Elemental Buffer Object
-	//we're going to use this thing to hold the indices values to help describe
-	//in which order to construct stuff out of a set of indices
-	unsigned int EBO; //id of EBO we want to build in GPU
-	glGenBuffers(1, &EBO); //generate buffer, return 1 id, store id in our EBO variable
-
-
-	//generate Vertex Array Object, we bind vbo data to this thing aswell as a few specific function calls
-	unsigned int VAO; //we'll store an id in this variable
-	glGenVertexArrays(1, &VAO); //how many arrays to build, where to store ids(we just want 1, store id in VAO)
-
-	//VAO2 was for rect
-	unsigned int VAO2;
-	glGenVertexArrays(1, &VAO2);
-
-	//VAO3 for rainbow triangle VBO3
-	unsigned int VAO3;
-	glGenVertexArrays(1, &VAO3);
-	
-
-	//to start binding data to our VAO, we have to make our VAO active by binding it first
-	glBindVertexArray(VAO);
-
-	//bind the VBO we want to the current working array
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	//describe the VBO data and bind the vertices
-	//params:
-	//which buffer to bind to? (the current binded array buffer)
-	//size of the data
-	//the data
-	//type of data: static, dynamic, stream
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	//tell it how to feed this vertex data into the vertex shader
-	//params:
-	//0 = variable location in our vertex shader program(aPos)
-	//3 = how many values make up a vertex in our data (1-4)
-	//GL_FLOAT = what datatype to map to in the shader
-	//GL_FALSE = 
-	//3*sizeof(float) = Stride(how to find the next vertex), after current, the next is 3 floats up
-	//(void*)0 = must be (void*) type..., but the zero is 'what is the starting index of your data'
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	//enable this variable location slot in our vertex shader
-	glEnableVertexAttribArray(0); //vec3 aPos
-
-	//finished binding information to current VAO, set binding to nothing for safety
-	glBindVertexArray(0);
-
-	//VAO2 binding
-	glBindVertexArray(VAO2);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO2);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(polygon), polygon, GL_STATIC_DRAW);
-	//bind our EBO buffer for use
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	//bind our indices to this buffer
-	//param:	bufferType,              size of data,      data to store, draw type
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glBindVertexArray(0);
-
-	//bind VAO
-	glBindVertexArray(VAO3);
-	//things to do with buffer and vertex attributes will be binded to VAO3 now
-		//bind buffer
-		glBindBuffer(GL_ARRAY_BUFFER, VBO3);
-		//give buffer the array of data
-		glBufferData(GL_ARRAY_BUFFER, sizeof(rainbowTriangleVertices), rainbowTriangleVertices, GL_STATIC_DRAW);
-
-		//tell it which parts of our rainbowTriangleVertices array are associated with vertex shaders
-		//location = 0 variable aPos
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-
-		//next, we want to tell it which parts of our array are the colour values to go into location = 1 variable aColour
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3*sizeof(float)));
-		glEnableVertexAttribArray(1);
-	glBindVertexArray(0);//unbind the VAO so we dont accidentally mess with our currently binded options
 
 	//array of 10 cube positions
 	/*glm::vec3 cubePositions[] = {
@@ -484,6 +508,9 @@ void main()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
+		float radius = 10.0f;
+		float camX = sin(glfwGetTime()) * radius;
+		float camZ = cos(glfwGetTime()) * radius;
 
 		//user inputs
 		processInputs(window);
@@ -496,7 +523,79 @@ void main()
 		//clear screen AND clear Z depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		shaderProgram4.use();
+		//-------------------------------------------------------------------------------
+		lightShaderProgram.use();
+		lightShaderProgram.setVec3("objectColour", 1.0f, 0.5f, 0.31f);
+		lightShaderProgram.setVec3("lightColour", lightColour);
+		lightShaderProgram.setVec3("lightPos", lightPos);
+		lightShaderProgram.setVec3("viewPos", camera.Position);
+
+		
+
+		//-------------------------------------------------------------------------------
+
+		if (!isHideText)
+		{
+			shaderProgram.use();
+			glBindVertexArray(polygonVAO);
+
+			//set active textures
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, topTextureID);
+
+			//set texture uniforms: tell each texture uniform which texture slot to use
+			glUniform1i(glGetUniformLocation(shaderProgram.ID, "texture1"), 0);//GL_TEXTURE0
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+			glm::mat4 topView = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+			glm::mat4 topProjection = glm::perspective(glm::radians(camera.Zoom), 800.0f / 600.0f, 0.1f, 100.0f);
+			glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "view"), 1, GL_FALSE, glm::value_ptr(topView));
+			glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "projection"), 1, GL_FALSE, glm::value_ptr(topProjection));
+
+			glm::mat4 topModel = glm::mat4(1.0f);
+			topModel = glm::translate(topModel, glm::vec3(0.0f, 0.2f, 0.0f));
+			//bottomModel = glm::rotate(bottomModel, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+			/*if (i % 2 == 0)
+			model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+			else
+			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+			*/
+			glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(topModel));
+		}
+
+		//------------------------------------------------------------------------------------------
+		if (!isHideText)
+		{
+			shaderProgram1.use();
+			glBindVertexArray(polygonVAO1);
+
+			//set active textures
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, bottomTextureID);
+
+			//set texture uniforms: tell each texture uniform which texture slot to use
+			glUniform1i(glGetUniformLocation(shaderProgram1.ID, "texture1"), 0);//GL_TEXTURE0
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+			glm::mat4 bottomView = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+			glm::mat4 bottomProjection = glm::perspective(glm::radians(camera.Zoom), 800.0f / 600.0f, 0.1f, 100.0f);
+			glUniformMatrix4fv(glGetUniformLocation(shaderProgram1.ID, "view"), 1, GL_FALSE, glm::value_ptr(bottomView));
+			glUniformMatrix4fv(glGetUniformLocation(shaderProgram1.ID, "projection"), 1, GL_FALSE, glm::value_ptr(bottomProjection));
+
+			glm::mat4 bottomModel = glm::mat4(1.0f);
+			bottomModel = glm::translate(bottomModel, glm::vec3(0.0f, -0.3f, 0.0f));
+			//bottomModel = glm::rotate(bottomModel, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+			/*if (i % 2 == 0)
+			model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+			else
+			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+			*/
+			glUniformMatrix4fv(glGetUniformLocation(shaderProgram1.ID, "model"), 1, GL_FALSE, glm::value_ptr(bottomModel));
+		}
+
+		//------------------------------------------------------------------------------------------
+
+		shaderProgram2.use();
 		//bind VAO to draw with
 		glBindVertexArray(cubeVAO);
 
@@ -505,12 +604,9 @@ void main()
 		//set active textures
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1ID);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture2ID);
 
 		//set texture uniforms: tell each texture uniform which texture slot to use
-		glUniform1i(glGetUniformLocation(shaderProgram4.ID, "texture1"), 0);//GL_TEXTURE0
-		glUniform1i(glGetUniformLocation(shaderProgram4.ID, "texture2"), 1);//GL_TEXTURE1
+		glUniform1i(glGetUniformLocation(shaderProgram2.ID, "texture1"), 0);//GL_TEXTURE0
 
 
 		//Coordinate systems:
@@ -519,7 +615,7 @@ void main()
 		//rotate our cube
 		//model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
 		//convert WORLD SPACE TO VIEW SPACE (adjust stuff based on where camera is looking)
-		glm::mat4 view = camera.GetViewMatrix();//glm::mat4 view = glm::mat4(1.0f);
+		glm::mat4 view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0)); //glm::mat4 view = glm::mat4(1.0f);
 		//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));//push objects away to simulate moving camera backwards
 		/*float radius = 5.0f;
 		float camX = sin(glfwGetTime())*radius;
@@ -535,24 +631,78 @@ void main()
 
 		//to set uniform values on shader
 		//glUniformMatrix4fv(glGetUniformLocation(shaderProgram4.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(shaderProgram4.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(shaderProgram4.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram2.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram2.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
 		//loop through to create a model matrix per position
 		//for (int i = 0; i < 10; i++)
 		//{
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-			model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
-			/*if (i % 2 == 0)
-				model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
-			else
-				model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-			*/
-			glUniformMatrix4fv(glGetUniformLocation(shaderProgram4.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-			glDrawArrays(GL_TRIANGLES, 0, 36);//starting at stride0, draw 36 rows of vertex data
-		//}
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-5.0f, 0.0f, 0.0f));
+		model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+		/*if (i % 2 == 0)
+		model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+		else
+		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+		*/
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram2.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);//starting at stride0, draw 36 rows of vertex data
+										  //}
+
+
+		//------------------------------------------------------------------------------------------
+
+		shaderProgram3.use();
+		//bind VAO to draw with
+		glBindVertexArray(cubeVAO1);
+
+		//set active textures
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture2ID);
+
+		//set texture uniforms: tell each texture uniform which texture slot to use
+		glUniform1i(glGetUniformLocation(shaderProgram3.ID, "texture1"), 0);//GL_TEXTURE0
+
+
+		glm::mat4 view1 = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+		glm::mat4 projection1 = glm::perspective(glm::radians(camera.Zoom), 800.0f / 600.0f, 0.1f, 100.0f);
+
+		//to set uniform values on shader
+		//glUniformMatrix4fv(glGetUniformLocation(shaderProgram4.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram3.ID, "view"), 1, GL_FALSE, glm::value_ptr(view1));
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram3.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection1));
+
+		glm::mat4 bottomModel1 = glm::mat4(1.0f);
+		bottomModel1 = glm::translate(bottomModel1, glm::vec3(0.0f, 0.0f, 0.0f));
+		bottomModel1 = glm::rotate(bottomModel1, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+		//bottomModel = glm::rotate(bottomModel, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+		/*if (i % 2 == 0)
+		model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+		else
+		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+		*/
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram3.ID, "model"), 1, GL_FALSE, glm::value_ptr(bottomModel1));
+		glDrawArrays(GL_TRIANGLES, 0, 36);//starting at stride0, draw 36 rows of vertex data
+
+		//------------------------------------------------------------------------------------------
+
+		//LAMP
+		lampShaderProgram.use();
+		lampShaderProgram.setVec3("lightColour", lightColour);
+		//bind our cube vao so we can draw a cube shape
+		glBindVertexArray(cubeVAO);
+		glm::mat4 lampModel = glm::mat4(1.0f);//matrix describing where our lamp is in world space
+		lampModel = glm::translate(lampModel, lightPos);//takes an existing matrix and moves(translates) it to the new position
+		lampModel = glm::rotate(lampModel, glm::radians(45.0f), glm::vec3(0.5f, 0.5f, 0.5f));
+		lampModel = glm::scale(lampModel, glm::vec3(2.0f, 2.0f, 2.0f));
+		lampShaderProgram.setMat4("model", lampModel);
+		lampShaderProgram.setMat4("view", view);
+		lampShaderProgram.setMat4("projection", projection);
+		//draw our lamp from the currently bound VBO
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		
+
+			
 
 		
 		//Input for window
@@ -565,11 +715,8 @@ void main()
 	}
 
 	//optional: de-allocate all resources
-	glDeleteVertexArrays(1, &VAO);//params: how many, thing with ids(unsigned int, or array of)
-	glDeleteVertexArrays(1, &VAO2);
-	glDeleteBuffers(1, &VBO);
-	glDeleteBuffers(1, &VBO2);
-	glDeleteBuffers(1, &EBO);
+
+
 	//glDeleteBuffers(2, VBOs); //example of deleting 2 VBO ids from the VBOs array
 
 
@@ -597,6 +744,11 @@ void processInputs(GLFWwindow* window)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		else
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		//hide the text
+		isHideText = true;
 	}
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
@@ -728,11 +880,11 @@ GLFWwindow* GameInit()
 	return window;
 }
 
-void LoadUpImage()
+void LoadUpImage(const char* path)
 {
 	//LOAD UP IMAGE FILE (JPEG FIRST)
 	int width, height, numberChannels; //as we load an image, we'll get values from it to fill these in
-	unsigned char *image1Data = stbi_load("Assets/Earth.jpg", &width, &height, &numberChannels, 0);
+	unsigned char *image1Data = stbi_load(path, &width, &height, &numberChannels, 0);
 	//if it loaded
 	if (image1Data)
 	{
